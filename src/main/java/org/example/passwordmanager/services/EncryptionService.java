@@ -24,10 +24,8 @@ public class EncryptionService {
                     Cipher.ENCRYPT_MODE,
                     getKey()
             );
-            byte[] encrypted =
-                    cipher.doFinal(data.getBytes());
-            return Base64.getEncoder()
-                    .encodeToString(encrypted);
+            byte[] encrypted = cipher.doFinal(data.getBytes());
+            return Base64.getEncoder().encodeToString(encrypted);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -41,9 +39,7 @@ public class EncryptionService {
                     Cipher.DECRYPT_MODE,
                     getKey()
             );
-            byte[] decoded =
-                    Base64.getDecoder()
-                            .decode(encryptedData);
+            byte[] decoded = Base64.getDecoder().decode(encryptedData);
             return new String(
                     cipher.doFinal(decoded)
             );
