@@ -1,12 +1,12 @@
 package org.example.passwordmanager.controllers;
 
 
-import org.example.passwordmanager.PasswordManagerApplication;
 import org.example.passwordmanager.dto.password.GetPasswordResponse;
 import org.example.passwordmanager.dto.password.PasswordAddRequest;
 import org.example.passwordmanager.dto.password.PasswordResponse;
 import org.example.passwordmanager.dto.password.UpdatePasswordResponse;
 import org.example.passwordmanager.entities.Password;
+import org.example.passwordmanager.services.EncryptionService;
 import org.example.passwordmanager.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +18,14 @@ import java.util.List;
 @RequestMapping("/password")
 public class PasswordsController {
     private final UserService userService;
+    private final EncryptionService encryptionService;
 
-    public PasswordsController(UserService userService){
+    public PasswordsController(
+            UserService userService,
+            EncryptionService encryptionService
+    ){
         this.userService = userService;
+        this.encryptionService = encryptionService;
     }
 
     @GetMapping
@@ -33,10 +38,10 @@ public class PasswordsController {
     public ResponseEntity<PasswordResponse> addNewPassword(
             @RequestBody PasswordAddRequest request,
             Principal principal
-            ){
+    ){
         String username = principal.getName();
         Password password = userService.addNewPassword(request, username);
-        System.out.println(password.getPassword());
+        //System.out.println(password.getPassword());
         return ResponseEntity.status(201).body(
                 new PasswordResponse(
                         password.getId(),
@@ -59,7 +64,7 @@ public class PasswordsController {
                 password.getId(),
                 password.getUsername(),
                 password.getSite(),
-                password.getPassword()
+                encryptionService.decrypt(password.getPassword())
         );
         return ResponseEntity.status(200).body(getPasswordResponse);
     }
@@ -79,7 +84,7 @@ public class PasswordsController {
                 id,
                 updated.getUsername(),
                 updated.getSite(),
-                updated.getPassword()
+                encryptionService.decrypt(updated.getPassword())
         );
 
         return ResponseEntity.status(200).body(response);

@@ -3,7 +3,7 @@ package org.example.passwordmanager.entities;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "vault_item")
+@Table(name = "passwords")
 public class Password {
 
     @Id

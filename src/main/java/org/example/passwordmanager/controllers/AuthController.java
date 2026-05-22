@@ -7,6 +7,7 @@ import org.example.passwordmanager.repositories.UserRepository;
 import org.example.passwordmanager.services.JWTService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,20 +15,25 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final UserRepository userRepository;
     private final JWTService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthController(
             UserRepository userRepository,
-            JWTService jwtService
+            JWTService jwtService,
+            PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegistrationRequest request){
         User user = new User();
         user.setUsername(request.username());
-        user.setPassword(request.password());
+        user.setPassword(
+                passwordEncoder.encode(request.password())
+        );
         userRepository.save(user);
         return ResponseEntity.ok("Пользователь создан");
     }
@@ -37,7 +43,7 @@ public class AuthController {
         try {
             User user = userRepository.findByUsername(request.username())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found: " + request.username()));
-            if (!user.getPassword().equals(request.password())) {
+            if (!passwordEncoder.matches(request.password(), user.getPassword())) {
                 return ResponseEntity.status(401).body("Неверный пароль");
             }
             String token = jwtService.generateToken(user.getUsername());

@@ -23,11 +23,17 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordRepository passwordRepository;
+    private final EncryptionService encryptionService;
 
-    public UserService(UserRepository userRepository, PasswordRepository passwordRepository){
+    public UserService(
+            UserRepository userRepository,
+            PasswordRepository passwordRepository,
+            EncryptionService encryptionService
+    ){
 
         this.userRepository = userRepository;
         this.passwordRepository = passwordRepository;
+        this.encryptionService = encryptionService;
     }
 
     public UserDetails loadUserByUsername(@NonNull String username){
@@ -67,7 +73,7 @@ public class UserService implements UserDetailsService {
         Password password = new Password(
                 request.site(),
                 request.username(),
-                request.password(),
+                encryptionService.encrypt(request.password()),
                 user
         );
         return passwordRepository.save(password);
@@ -107,7 +113,7 @@ public class UserService implements UserDetailsService {
 
         password.setUsername(request.username());
         password.setSite(request.site());
-        password.setPassword(request.password());
+        password.setPassword(encryptionService.encrypt(request.password()));
 
         return passwordRepository.save(password);
     }
